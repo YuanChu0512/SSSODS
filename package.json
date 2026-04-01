@@ -1,0 +1,17 @@
+{
+  "name": "seat-occupancy-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Persistent seat occupancy and reservation system with authentication.",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "node server/app.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.7"
+  }
+}
