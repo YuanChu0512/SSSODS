@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seat Occupancy Monitor</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="dashboard-card">
+        <div class="topbar">
+          <div>
+            <p id="eyebrow" class="eyebrow">Study Seat Platform</p>
+            <h1 id="page-title">Seat Management Dashboard</h1>
+            <p id="seat-label" class="seat-label">Seat ID: seat-001</p>
+          </div>
+
+          <div class="language-switcher" aria-label="Language switcher">
+            <button id="lang-zh" class="language-button" type="button">&#20013;&#25991;</button>
+            <button id="lang-en" class="language-button active" type="button">EN</button>
+          </div>
+        </div>
+
+        <section class="status-grid">
+          <article class="status-panel">
+            <p id="occupancy-panel-label" class="panel-label">Occupancy</p>
+            <div id="occupancy-badge" class="status-badge status-unknown">Loading...</div>
+            <p id="occupancy-text" class="status-text">Waiting for seat occupancy status...</p>
+          </article>
+
+          <article class="status-panel">
+            <p id="reservation-panel-label" class="panel-label">Reservation</p>
+            <div id="reservation-badge" class="status-badge status-unknown">Loading...</div>
+            <p id="reservation-text" class="status-text">Waiting for reservation status...</p>
+          </article>
+        </section>
+
+        <section class="two-column-grid">
+          <section class="feature-panel">
+            <h2 id="auth-heading">User Account</h2>
+            <p id="auth-status" class="status-text compact-text">Not signed in.</p>
+            <label id="display-name-label" class="field-label" for="display-name">Display Name</label>
+            <input id="display-name" class="text-input" type="text" placeholder="Enter your display name" />
+            <label id="username-label" class="field-label" for="username">Username</label>
+            <input id="username" class="text-input" type="text" placeholder="Enter a username" />
+            <label id="password-label" class="field-label" for="password">Password</label>
+            <input id="password" class="text-input" type="password" placeholder="At least 6 characters" />
+            <div class="action-row">
+              <button id="register-button" class="action-button primary-button" type="button">Register</button>
+              <button id="login-button" class="action-button secondary-button" type="button">Login</button>
+              <button id="logout-button" class="action-button subtle-button" type="button">Logout</button>
+            </div>
+          </section>
+
+          <section class="feature-panel">
+            <h2 id="reservation-heading">Seat Reservation</h2>
+            <p id="reservation-helper" class="status-text compact-text">Sign in first, then reserve or cancel the seat.</p>
+            <div class="action-row reservation-row">
+              <button id="reserve-button" class="action-button primary-button" type="button">Reserve Seat</button>
+              <button id="cancel-button" class="action-button secondary-button" type="button">Cancel Reservation</button>
+            </div>
+            <p id="action-message" class="action-message">System messages will appear here.</p>
+          </section>
+        </section>
+
+        <section class="activity-panel">
+          <h2 id="activity-heading">Recent Activity</h2>
+          <div class="two-column-grid">
+            <div class="feature-panel inner-panel">
+              <p id="occupancy-log-label" class="panel-label">Recent Occupancy Events</p>
+              <ul id="occupancy-log" class="activity-list"></ul>
+            </div>
+            <div class="feature-panel inner-panel">
+              <p id="reservation-log-label" class="panel-label">Recent Reservations</p>
+              <ul id="reservation-log" class="activity-list"></ul>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
