@@ -50,6 +50,11 @@ function all(sql, params = []) {
   });
 }
 
+async function hasColumn(tableName, columnName) {
+  const columns = await all(`PRAGMA table_info(${tableName})`);
+  return columns.some((column) => column.name === columnName);
+}
+
 async function initializeDatabase() {
   await run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -87,6 +92,9 @@ async function initializeDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       seat_id INTEGER NOT NULL,
       user_id INTEGER NOT NULL,
+      reservation_date TEXT,
+      start_minute INTEGER,
+      end_minute INTEGER,
       status TEXT NOT NULL,
       created_at TEXT NOT NULL,
       cancelled_at TEXT,
@@ -121,6 +129,18 @@ async function initializeDatabase() {
      VALUES (?, 'Free', 'Not Reserved', NULL, ?)`,
     [seat.id, now]
   );
+
+  if (!(await hasColumn('reservations', 'reservation_date'))) {
+    await run(`ALTER TABLE reservations ADD COLUMN reservation_date TEXT`);
+  }
+
+  if (!(await hasColumn('reservations', 'start_minute'))) {
+    await run(`ALTER TABLE reservations ADD COLUMN start_minute INTEGER`);
+  }
+
+  if (!(await hasColumn('reservations', 'end_minute'))) {
+    await run(`ALTER TABLE reservations ADD COLUMN end_minute INTEGER`);
+  }
 }
 
 module.exports = {
