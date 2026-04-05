@@ -78,6 +78,22 @@
             <section class="feature-panel">
               <h2 id="reservation-heading">Seat Reservation</h2>
               <p id="reservation-helper" class="status-text compact-text">Reserve the seat or cancel your reservation from here.</p>
+              <div class="reservation-toolbar">
+                <label id="reservation-date-label" class="panel-label" for="reservation-date">Reservation Date</label>
+                <input id="reservation-date" class="date-input" type="date" />
+              </div>
+              <div class="range-picker">
+                <div>
+                  <label id="reservation-start-label" class="panel-label" for="reservation-start">Start Time</label>
+                  <select id="reservation-start" class="date-input"></select>
+                </div>
+                <div>
+                  <label id="reservation-end-label" class="panel-label" for="reservation-end">End Time</label>
+                  <select id="reservation-end" class="date-input"></select>
+                </div>
+              </div>
+              <div id="selected-slot-summary" class="selection-summary">No slot selected.</div>
+              <div id="slot-grid" class="slot-grid"></div>
               <div class="action-row reservation-row">
                 <button id="reserve-button" class="action-button primary-button" type="button">Reserve Seat</button>
                 <button id="cancel-button" class="action-button secondary-button" type="button">Cancel Reservation</button>
