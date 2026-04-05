@@ -27,6 +27,14 @@ const occupancyPanelLabel = document.getElementById('occupancy-panel-label');
 const reservationPanelLabel = document.getElementById('reservation-panel-label');
 const reservationHeading = document.getElementById('reservation-heading');
 const reservationHelper = document.getElementById('reservation-helper');
+const reservationDateLabel = document.getElementById('reservation-date-label');
+const reservationDateInput = document.getElementById('reservation-date');
+const reservationStartLabel = document.getElementById('reservation-start-label');
+const reservationStartSelect = document.getElementById('reservation-start');
+const reservationEndLabel = document.getElementById('reservation-end-label');
+const reservationEndSelect = document.getElementById('reservation-end');
+const selectedSlotSummary = document.getElementById('selected-slot-summary');
+const slotGrid = document.getElementById('slot-grid');
 const activityHeading = document.getElementById('activity-heading');
 const occupancyLogLabel = document.getElementById('occupancy-log-label');
 const reservationLogLabel = document.getElementById('reservation-log-label');
@@ -38,32 +46,58 @@ const goRegisterLink = document.getElementById('go-register-link');
 const langZhButton = document.getElementById('lang-zh');
 const langEnButton = document.getElementById('lang-en');
 
+const OPENING_MINUTE = 8 * 60;
+const CLOSING_MINUTE = 22 * 60;
+const SLOT_DURATION_MINUTE = 15;
+const MAX_RESERVATION_MINUTE = 6 * 60;
+
 const translations = {
   en: {
     htmlLang: 'en',
     title: 'Seat Management Dashboard',
     eyebrow: 'Smart Study Space',
-    pageSubtitle: 'Monitor one study seat in real time and manage reservations with a logged-in account.',
+    pageSubtitle: 'Monitor one study seat in real time and reserve any 15-minute range between 08:00 and 22:00.',
     seatLabel: 'Seat ID',
     metaLabel: 'Last Sync',
     occupancyPanelLabel: 'Occupancy',
-    reservationPanelLabel: 'Reservation',
+    reservationPanelLabel: 'Active Reservation',
     occupancyChip: 'Sensor',
-    reservationChip: 'Booking',
+    reservationChip: 'Current Slot',
     occupancyCaptionLabel: 'Live Sensor Feed',
-    reservationCaptionLabel: 'Reservation Owner',
+    reservationCaptionLabel: 'Current Reservation',
     accountCaptionLabel: 'Current Account',
     occupancyCaptionWaiting: 'Waiting for occupancy update.',
     occupancyCaptionOccupied: 'A person is currently detected on the seat.',
     occupancyCaptionFree: 'No person is currently detected on the seat.',
-    reservationCaptionEmpty: 'No active reservation.',
+    reservationCaptionEmpty: 'No active reservation right now.',
+    reservationCaptionPrivate: 'Reserved by another student.',
     accountCaptionChecking: 'Checking account...',
     accountCaptionSignedOut: 'Please sign in.',
     accountCaptionSignedIn: (name) => `${name}`,
     authSignedOut: 'Please sign in again to continue.',
     authSignedIn: (name) => `Signed in as ${name}.`,
-    reservationHeading: 'Seat Reservation',
-    reservationHelper: 'Reserve the seat or cancel your reservation from here.',
+    reservationHeading: 'Flexible Reservation',
+    reservationHelper: 'Choose a start and end time in 15-minute increments. Each booking can last up to 6 hours.',
+    reservationDateLabel: 'Reservation Date',
+    reservationStartLabel: 'Start Time',
+    reservationEndLabel: 'End Time',
+    selectedRange: (start, end) => `Ready to reserve: ${start} - ${end}`,
+    selectedOwnedReservation: (label) => `Selected your reservation: ${label}`,
+    selectedReservedRange: (label, name) => `${label} is reserved by ${name || 'another user'}.`,
+    selectedPastRange: (label) => `${label} has already passed.`,
+    selectedSlotEmpty: 'Choose a time range or click one of your reservations below.',
+    reservationOverviewEmpty: 'No reservations for this date yet.',
+    tableHeaderTime: 'Time Range',
+    tableHeaderOwner: 'Owner',
+    tableHeaderStatus: 'Status',
+    privateOwnerLabel: 'Private',
+    currentUserLabel: 'You',
+    slotAvailable: 'Available',
+    slotReserved: 'Reserved',
+    slotPast: 'Past',
+    slotOwned: 'Your Booking',
+    reserveButton: 'Reserve Selected Range',
+    cancelButton: 'Cancel Selected Reservation',
     activityHeading: 'Recent Activity',
     occupancyLogLabel: 'Recent Occupancy Events',
     reservationLogLabel: 'Recent Reservations',
@@ -72,8 +106,6 @@ const translations = {
     promoText: 'Open the sign-in pages to switch account or create a new student account.',
     goLogin: 'Go to Login',
     goRegister: 'Go to Register',
-    reserveButton: 'Reserve Seat',
-    cancelButton: 'Cancel Reservation',
     logoutButton: 'Logout',
     loading: 'Loading...',
     occupancyFree: 'Free',
@@ -82,45 +114,81 @@ const translations = {
     reservationNotReserved: 'Not Reserved',
     occupancyOccupiedText: 'The sensor currently reports that someone is sitting in this seat.',
     occupancyFreeText: 'The sensor currently reports that this seat is empty.',
-    reservationReservedText: (reservedBy) => reservedBy ? `This seat is currently reserved by ${reservedBy}.` : 'This seat is currently reserved.',
-    reservationNotReservedText: 'This seat is currently not reserved.',
+    reservationReservedText: (reservedBy, startTime, endTime) => {
+      const label = startTime && endTime ? `${startTime} - ${endTime}` : 'the current range';
+      return reservedBy && reservedBy !== 'private'
+        ? `This seat is reserved by ${reservedBy} during ${label}.`
+        : `This seat is reserved during ${label}.`;
+    },
+    reservationNotReservedText: 'This seat has no active reservation in the current time range.',
     systemMessageDefault: 'System messages will appear here.',
     needLoginMessage: 'Please log in before making a reservation.',
     unavailable: 'Unavailable',
     fetchOccupancyError: 'Unable to load occupancy status from the server.',
     fetchReservationError: 'Unable to load reservation status from the server.',
+    fetchSlotsError: 'Unable to load reservation ranges for the selected date.',
     noOccupancyEvents: 'No occupancy events have been recorded yet.',
     noReservations: 'No reservations have been recorded yet.',
     occupancyLogItem: (item) => `${item.occupancyStatus} from ${item.source} at ${formatDate(item.createdAt)}`,
-    reservationLogItem: (item) => `${item.displayName || item.username} - ${item.status} at ${formatDate(item.createdAt)}`,
+    reservationLogItem: (item) => `${item.isOwnedByCurrentUser ? (item.displayName || item.username || 'You') : (item.displayName || 'Private')} - ${item.status} - ${item.reservationDate || '-'} ${item.slotLabel || ''}`.trim(),
     logoutSuccessful: 'Logged out successfully.',
-    cancelOwnOnly: 'Only the user who reserved the seat can cancel it.'
+    rangeConflict: 'The selected time range overlaps an existing reservation.',
+    invalidReservationDate: 'Please choose a valid reservation date.',
+    invalidRangeFormat: 'Please choose start and end times in 15-minute increments between 08:00 and 22:00.',
+    invalidRangeOrder: 'End time must be later than start time.',
+    maxDurationExceeded: 'A single reservation cannot exceed 6 hours.',
+    pastRange: 'Past time ranges cannot be reserved.',
+    missingReservation: 'The selected reservation could not be found.',
+    cancelOwnOnly: 'Only the user who reserved the slot can cancel it.',
+    reserveHint: 'Choose a valid start and end time to enable reservation.',
+    cancelHint: 'Click one of your reserved ranges below to cancel it.'
   },
   zh: {
     htmlLang: 'zh-CN',
     title: '\u5ea7\u4f4d\u7ba1\u7406\u9762\u677f',
     eyebrow: '\u667a\u80fd\u81ea\u4e60\u7a7a\u95f4',
-    pageSubtitle: '\u5b9e\u65f6\u67e5\u770b\u5355\u4e2a\u81ea\u4e60\u5ea7\u4f4d\u72b6\u6001\uff0c\u5e76\u5728\u767b\u5f55\u540e\u7ba1\u7406\u9884\u7ea6\u3002',
+    pageSubtitle: '\u5b9e\u65f6\u76d1\u6d4b\u5355\u4e2a\u81ea\u4e60\u5ea7\u4f4d\uff0c\u5e76\u5728 08:00-22:00 \u4e4b\u95f4\u6309 15 \u5206\u949f\u7c92\u5ea6\u81ea\u7531\u9884\u7ea6\u65f6\u95f4\u8303\u56f4\u3002',
     seatLabel: '\u5ea7\u4f4d\u7f16\u53f7',
     metaLabel: '\u6700\u8fd1\u540c\u6b65',
     occupancyPanelLabel: '\u5360\u7528\u72b6\u6001',
-    reservationPanelLabel: '\u9884\u7ea6\u72b6\u6001',
+    reservationPanelLabel: '\u5f53\u524d\u6709\u6548\u9884\u7ea6',
     occupancyChip: '\u4f20\u611f\u5668',
-    reservationChip: '\u9884\u7ea6',
+    reservationChip: '\u5f53\u524d\u65f6\u6bb5',
     occupancyCaptionLabel: '\u5b9e\u65f6\u4f20\u611f',
-    reservationCaptionLabel: '\u9884\u7ea6\u4eba',
+    reservationCaptionLabel: '\u5f53\u524d\u9884\u7ea6',
     accountCaptionLabel: '\u5f53\u524d\u8d26\u6237',
     occupancyCaptionWaiting: '\u6b63\u5728\u7b49\u5f85\u5360\u7528\u66f4\u65b0\u3002',
     occupancyCaptionOccupied: '\u7cfb\u7edf\u5df2\u68c0\u6d4b\u5230\u5ea7\u4f4d\u4e0a\u6709\u4eba\u3002',
     occupancyCaptionFree: '\u7cfb\u7edf\u5f53\u524d\u672a\u68c0\u6d4b\u5230\u4f7f\u7528\u8005\u3002',
-    reservationCaptionEmpty: '\u5f53\u524d\u6ca1\u6709\u9884\u7ea6\u4eba\u3002',
+    reservationCaptionEmpty: '\u5f53\u524d\u6ca1\u6709\u6b63\u5728\u751f\u6548\u7684\u9884\u7ea6\u3002',
+    reservationCaptionPrivate: '\u7531\u5176\u4ed6\u540c\u5b66\u9884\u7ea6',
     accountCaptionChecking: '\u6b63\u5728\u68c0\u67e5\u8d26\u6237...',
     accountCaptionSignedOut: '\u8bf7\u5148\u767b\u5f55\u3002',
     accountCaptionSignedIn: (name) => `${name}`,
     authSignedOut: '\u8bf7\u5148\u91cd\u65b0\u767b\u5f55\u540e\u518d\u7ee7\u7eed\u3002',
     authSignedIn: (name) => `\u5f53\u524d\u767b\u5f55\u7528\u6237\uff1a${name}\u3002`,
-    reservationHeading: '\u5ea7\u4f4d\u9884\u7ea6',
-    reservationHelper: '\u4f60\u53ef\u4ee5\u5728\u8fd9\u91cc\u9884\u7ea6\u6216\u53d6\u6d88\u9884\u7ea6\u3002',
+    reservationHeading: '\u7075\u6d3b\u65f6\u6bb5\u9884\u7ea6',
+    reservationHelper: '\u5f00\u59cb\u4e0e\u7ed3\u675f\u65f6\u95f4\u90fd\u53ef\u4ee5\u9009\u62e9\uff0c15 \u5206\u949f\u4e3a\u4e00\u4e2a\u7c92\u5ea6\uff0c\u5355\u6b21\u6700\u957f\u4e0d\u8d85\u8fc7 6 \u5c0f\u65f6\u3002',
+    reservationDateLabel: '\u9884\u7ea6\u65e5\u671f',
+    reservationStartLabel: '\u5f00\u59cb\u65f6\u95f4',
+    reservationEndLabel: '\u7ed3\u675f\u65f6\u95f4',
+    selectedRange: (start, end) => `\u5f53\u524d\u5f85\u9884\u7ea6\u65f6\u6bb5\uff1a${start} - ${end}`,
+    selectedOwnedReservation: (label) => `\u5df2\u9009\u4e2d\u4f60\u7684\u9884\u7ea6\uff1a${label}`,
+    selectedReservedRange: (label, name) => `${label} \u5df2\u88ab${name ? ` ${name}` : '\u5176\u4ed6\u7528\u6237'}\u9884\u7ea6\u3002`,
+    selectedPastRange: (label) => `${label} \u5df2\u8fc7\u671f\u3002`,
+    selectedSlotEmpty: '\u8bf7\u9009\u62e9\u5f00\u59cb/\u7ed3\u675f\u65f6\u95f4\uff0c\u6216\u70b9\u51fb\u4e0b\u65b9\u4f60\u81ea\u5df1\u7684\u9884\u7ea6\u6765\u53d6\u6d88\u3002',
+    reservationOverviewEmpty: '\u6240\u9009\u65e5\u671f\u6682\u65e0\u4efb\u4f55\u9884\u7ea6\u3002',
+    tableHeaderTime: '\u65f6\u95f4\u8303\u56f4',
+    tableHeaderOwner: '\u9884\u7ea6\u4eba',
+    tableHeaderStatus: '\u72b6\u6001',
+    privateOwnerLabel: '\u9690\u79c1\u4fdd\u62a4',
+    currentUserLabel: '\u4f60',
+    slotAvailable: '\u53ef\u9884\u7ea6',
+    slotReserved: '\u5df2\u9884\u7ea6',
+    slotPast: '\u5df2\u8fc7\u671f',
+    slotOwned: '\u4f60\u7684\u9884\u7ea6',
+    reserveButton: '\u9884\u7ea6\u6240\u9009\u65f6\u95f4\u8303\u56f4',
+    cancelButton: '\u53d6\u6d88\u6240\u9009\u9884\u7ea6',
     activityHeading: '\u6700\u8fd1\u6d3b\u52a8',
     occupancyLogLabel: '\u6700\u8fd1\u5360\u7528\u8bb0\u5f55',
     reservationLogLabel: '\u6700\u8fd1\u9884\u7ea6\u8bb0\u5f55',
@@ -129,8 +197,6 @@ const translations = {
     promoText: '\u53ef\u4ee5\u6253\u5f00\u767b\u5f55\u6216\u6ce8\u518c\u9875\u9762\uff0c\u5207\u6362\u8d26\u53f7\u6216\u521b\u5efa\u65b0\u7684\u5b66\u751f\u8d26\u53f7\u3002',
     goLogin: '\u524d\u5f80\u767b\u5f55',
     goRegister: '\u524d\u5f80\u6ce8\u518c',
-    reserveButton: '\u9884\u7ea6\u5ea7\u4f4d',
-    cancelButton: '\u53d6\u6d88\u9884\u7ea6',
     logoutButton: '\u9000\u51fa\u767b\u5f55',
     loading: '\u52a0\u8f7d\u4e2d...',
     occupancyFree: '\u7a7a\u95f2',
@@ -139,27 +205,44 @@ const translations = {
     reservationNotReserved: '\u672a\u9884\u7ea6',
     occupancyOccupiedText: '\u4f20\u611f\u5668\u5f53\u524d\u4e0a\u62a5\u8be5\u5ea7\u4f4d\u6709\u4eba\u4f7f\u7528\u3002',
     occupancyFreeText: '\u4f20\u611f\u5668\u5f53\u524d\u4e0a\u62a5\u8be5\u5ea7\u4f4d\u4e3a\u7a7a\u95f2\u72b6\u6001\u3002',
-    reservationReservedText: (reservedBy) => reservedBy ? `\u8be5\u5ea7\u4f4d\u5f53\u524d\u7531 ${reservedBy} \u9884\u7ea6\u3002` : '\u8be5\u5ea7\u4f4d\u5f53\u524d\u5df2\u88ab\u9884\u7ea6\u3002',
-    reservationNotReservedText: '\u8be5\u5ea7\u4f4d\u5f53\u524d\u672a\u88ab\u9884\u7ea6\u3002',
+    reservationReservedText: (reservedBy, startTime, endTime) => {
+      const label = startTime && endTime ? `${startTime} - ${endTime}` : '\u5f53\u524d\u65f6\u95f4\u8303\u56f4';
+      return reservedBy && reservedBy !== 'private'
+        ? `\u8be5\u5ea7\u4f4d\u5728 ${label} \u7531 ${reservedBy} \u9884\u7ea6\u3002`
+        : `\u8be5\u5ea7\u4f4d\u5728 ${label} \u5df2\u88ab\u9884\u7ea6\u3002`;
+    },
+    reservationNotReservedText: '\u8be5\u5ea7\u4f4d\u5f53\u524d\u6ca1\u6709\u751f\u6548\u4e2d\u7684\u9884\u7ea6\u65f6\u95f4\u6bb5\u3002',
     systemMessageDefault: '\u7cfb\u7edf\u6d88\u606f\u4f1a\u663e\u793a\u5728\u8fd9\u91cc\u3002',
     needLoginMessage: '\u8bf7\u5148\u767b\u5f55\uff0c\u518d\u8fdb\u884c\u9884\u7ea6\u64cd\u4f5c\u3002',
     unavailable: '\u4e0d\u53ef\u7528',
     fetchOccupancyError: '\u65e0\u6cd5\u4ece\u670d\u52a1\u5668\u52a0\u8f7d\u5360\u7528\u72b6\u6001\u3002',
     fetchReservationError: '\u65e0\u6cd5\u4ece\u670d\u52a1\u5668\u52a0\u8f7d\u9884\u7ea6\u72b6\u6001\u3002',
+    fetchSlotsError: '\u65e0\u6cd5\u52a0\u8f7d\u6240\u9009\u65e5\u671f\u7684\u9884\u7ea6\u65f6\u95f4\u8303\u56f4\u3002',
     noOccupancyEvents: '\u6682\u65e0\u5360\u7528\u8bb0\u5f55\u3002',
     noReservations: '\u6682\u65e0\u9884\u7ea6\u8bb0\u5f55\u3002',
     occupancyLogItem: (item) => `${item.occupancyStatus === 'Occupied' ? '\u6709\u4eba' : '\u7a7a\u95f2'} / ${item.source} / ${formatDate(item.createdAt)}`,
-    reservationLogItem: (item) => `${item.displayName || item.username} / ${item.status === 'Active' ? '\u6709\u6548' : '\u5df2\u53d6\u6d88'} / ${formatDate(item.createdAt)}`,
+    reservationLogItem: (item) => `${item.isOwnedByCurrentUser ? (item.displayName || item.username || '\u4f60') : (item.displayName || '\u9690\u79c1\u4fdd\u62a4')} / ${item.status === 'Active' ? '\u6709\u6548' : '\u5df2\u53d6\u6d88'} / ${item.reservationDate || '-'} ${item.slotLabel || ''}`.trim(),
     logoutSuccessful: '\u5df2\u6210\u529f\u9000\u51fa\u767b\u5f55\u3002',
-    cancelOwnOnly: '\u53ea\u6709\u9884\u7ea6\u8005\u672c\u4eba\u624d\u80fd\u53d6\u6d88\u9884\u7ea6\u3002'
+    rangeConflict: '\u6240\u9009\u65f6\u95f4\u8303\u56f4\u4e0e\u73b0\u6709\u9884\u7ea6\u51b2\u7a81\u3002',
+    invalidReservationDate: '\u8bf7\u9009\u62e9\u6709\u6548\u7684\u9884\u7ea6\u65e5\u671f\u3002',
+    invalidRangeFormat: '\u8bf7\u9009\u62e9 08:00 \u5230 22:00 \u4e4b\u95f4\u3001\u4ee5 15 \u5206\u949f\u4e3a\u7c92\u5ea6\u7684\u5f00\u59cb/\u7ed3\u675f\u65f6\u95f4\u3002',
+    invalidRangeOrder: '\u7ed3\u675f\u65f6\u95f4\u5fc5\u987b\u665a\u4e8e\u5f00\u59cb\u65f6\u95f4\u3002',
+    maxDurationExceeded: '\u5355\u6b21\u9884\u7ea6\u65f6\u957f\u4e0d\u80fd\u8d85\u8fc7 6 \u5c0f\u65f6\u3002',
+    pastRange: '\u8fc7\u53bb\u7684\u65f6\u95f4\u8303\u56f4\u4e0d\u80fd\u9884\u7ea6\u3002',
+    missingReservation: '\u672a\u627e\u5230\u6240\u9009\u9884\u7ea6\u8bb0\u5f55\u3002',
+    cancelOwnOnly: '\u53ea\u6709\u9884\u7ea6\u8be5\u65f6\u6bb5\u7684\u7528\u6237\u624d\u80fd\u53d6\u6d88\u3002',
+    reserveHint: '\u8bf7\u9009\u62e9\u6709\u6548\u7684\u5f00\u59cb/\u7ed3\u675f\u65f6\u95f4\uff0c\u518d\u8fdb\u884c\u9884\u7ea6\u3002',
+    cancelHint: '\u8bf7\u5148\u70b9\u51fb\u4e0b\u65b9\u5c5e\u4e8e\u4f60\u7684\u9884\u7ea6\uff0c\u518d\u8fdb\u884c\u53d6\u6d88\u3002'
   }
 };
 
 let currentLanguage = localStorage.getItem('seatMonitorLanguage') || 'en';
 let latestSeatState = null;
 let latestActivity = { recentReservations: [], recentOccupancyEvents: [] };
+let latestSlotData = { slots: [] };
 let currentUser = null;
 let currentMessage = '';
+let selectedReservationId = null;
 
 function t(key) {
   return translations[currentLanguage][key];
@@ -168,6 +251,30 @@ function t(key) {
 function formatDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleString(currentLanguage === 'zh' ? 'zh-CN' : 'en-US');
+}
+
+function formatMinute(minute) {
+  return `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`;
+}
+
+function getTimeOptions() {
+  const times = [];
+
+  for (let minute = OPENING_MINUTE; minute <= CLOSING_MINUTE; minute += SLOT_DURATION_MINUTE) {
+    times.push(formatMinute(minute));
+  }
+
+  return times;
+}
+
+function getTodayDateValue() {
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 10);
+}
+
+function getSelectedDate() {
+  return reservationDateInput.value || getTodayDateValue();
 }
 
 function getToken() {
@@ -208,9 +315,14 @@ function localizeMessage(message) {
   const map = {
     'Reservation created successfully.': currentLanguage === 'zh' ? '\u9884\u7ea6\u521b\u5efa\u6210\u529f\u3002' : 'Reservation created successfully.',
     'Reservation cancelled successfully.': currentLanguage === 'zh' ? '\u9884\u7ea6\u5df2\u53d6\u6d88\u3002' : 'Reservation cancelled successfully.',
-    'This seat is already reserved.': currentLanguage === 'zh' ? '\u8be5\u5ea7\u4f4d\u5df2\u7ecf\u88ab\u9884\u7ea6\u3002' : 'This seat is already reserved.',
-    'There is no active reservation to cancel.': currentLanguage === 'zh' ? '\u5f53\u524d\u6ca1\u6709\u53ef\u53d6\u6d88\u7684\u9884\u7ea6\u3002' : 'There is no active reservation to cancel.',
-    'Only the user who reserved the seat can cancel it.': t('cancelOwnOnly'),
+    'The selected time range overlaps an existing reservation.': t('rangeConflict'),
+    'reservationDate must use YYYY-MM-DD format.': t('invalidReservationDate'),
+    'startTime and endTime must use 15-minute increments between 08:00 and 22:00.': t('invalidRangeFormat'),
+    'endTime must be later than startTime.': t('invalidRangeOrder'),
+    'A single reservation cannot exceed 6 hours.': t('maxDurationExceeded'),
+    'Past time ranges cannot be reserved.': t('pastRange'),
+    'The selected reservation could not be found.': t('missingReservation'),
+    'Only the user who reserved the slot can cancel it.': t('cancelOwnOnly'),
     'Authentication required.': t('needLoginMessage'),
     'Logged out successfully.': t('logoutSuccessful')
   };
@@ -221,6 +333,154 @@ function localizeMessage(message) {
 function setBadge(element, statusClass, text) {
   element.className = `status-badge ${statusClass}`;
   element.textContent = text;
+}
+
+function populateTimeSelect(selectElement, options, preferredValue) {
+  selectElement.innerHTML = '';
+
+  options.forEach((value) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = value;
+    option.selected = value === preferredValue;
+    selectElement.appendChild(option);
+  });
+
+  if (!selectElement.value && options.length) {
+    selectElement.value = options[0];
+  }
+}
+
+function syncTimeInputs() {
+  const allTimes = getTimeOptions();
+  const startValue = reservationStartSelect.value || allTimes[0];
+  populateTimeSelect(reservationStartSelect, allTimes.slice(0, -1), startValue);
+
+  const startMinute = timeToMinute(reservationStartSelect.value);
+  const endOptions = allTimes.filter((value) => {
+    const minute = timeToMinute(value);
+    return minute > startMinute && minute <= Math.min(startMinute + MAX_RESERVATION_MINUTE, CLOSING_MINUTE);
+  });
+  const preferredEnd = endOptions.includes(reservationEndSelect.value) ? reservationEndSelect.value : endOptions[0];
+  populateTimeSelect(reservationEndSelect, endOptions, preferredEnd);
+}
+
+function timeToMinute(value) {
+  const parts = value.split(':').map(Number);
+  return (parts[0] * 60) + parts[1];
+}
+
+function getSelectedOwnedReservation() {
+  if (!selectedReservationId || !latestSlotData.slots) {
+    return null;
+  }
+
+  return latestSlotData.slots.find((slot) => slot.reservationId === selectedReservationId && slot.isOwnedByCurrentUser) || null;
+}
+
+function updateActionButtons() {
+  const startValue = reservationStartSelect.value;
+  const endValue = reservationEndSelect.value;
+  const hasValidRange = Boolean(startValue && endValue && timeToMinute(endValue) > timeToMinute(startValue));
+
+  reserveButton.disabled = !hasValidRange;
+  cancelButton.disabled = !Boolean(getSelectedOwnedReservation());
+}
+
+function renderSelectionSummary() {
+  const ownedReservation = getSelectedOwnedReservation();
+
+  if (ownedReservation) {
+    selectedSlotSummary.textContent = t('selectedOwnedReservation')(ownedReservation.reservationLabel || ownedReservation.label);
+    updateActionButtons();
+    return;
+  }
+
+  if (reservationStartSelect.value && reservationEndSelect.value) {
+    selectedSlotSummary.textContent = t('selectedRange')(reservationStartSelect.value, reservationEndSelect.value);
+  } else {
+    selectedSlotSummary.textContent = t('selectedSlotEmpty');
+  }
+
+  updateActionButtons();
+}
+
+function renderSlotGrid() {
+  slotGrid.innerHTML = '';
+
+  if (!latestSlotData.slots || !latestSlotData.slots.length) {
+    renderSelectionSummary();
+    return;
+  }
+
+  const reservationMap = new Map();
+
+  latestSlotData.slots.forEach((slot) => {
+    if (!slot.reservationId) {
+      return;
+    }
+
+    if (!reservationMap.has(slot.reservationId)) {
+      reservationMap.set(slot.reservationId, {
+        reservationId: slot.reservationId,
+        reservationLabel: slot.reservationLabel || `${slot.reservationStartTime} - ${slot.reservationEndTime}`,
+        reservedBy: slot.reservedBy,
+        isOwnedByCurrentUser: slot.isOwnedByCurrentUser,
+        isPast: slot.reservationStatus === 'Past',
+        status: slot.isOwnedByCurrentUser ? 'owned' : 'reserved'
+      });
+    }
+  });
+
+  const reservations = Array.from(reservationMap.values());
+
+  if (!reservations.length) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'selection-summary';
+    emptyState.textContent = t('reservationOverviewEmpty');
+    slotGrid.appendChild(emptyState);
+    renderSelectionSummary();
+    return;
+  }
+
+  const table = document.createElement('div');
+  table.className = 'reservation-table';
+
+  const header = document.createElement('div');
+  header.className = 'reservation-table-row reservation-table-header';
+  header.innerHTML = `
+    <span>${t('tableHeaderTime')}</span>
+    <span>${t('tableHeaderOwner')}</span>
+    <span>${t('tableHeaderStatus')}</span>
+  `;
+  table.appendChild(header);
+
+  reservations.forEach((reservation) => {
+    const row = document.createElement('button');
+    const isOwned = reservation.isOwnedByCurrentUser;
+    const isSelected = Boolean(selectedReservationId && reservation.reservationId === selectedReservationId);
+    const statusLabel = isOwned ? t('slotOwned') : t('slotReserved');
+
+    row.type = 'button';
+    row.className = `reservation-table-row reservation-table-item${isSelected ? ' selected' : ''}`;
+    row.disabled = !isOwned;
+    row.innerHTML = `
+      <span class="reservation-table-time">${reservation.reservationLabel}</span>
+      <span>${isOwned ? (reservation.reservedBy || t('currentUserLabel')) : t('privateOwnerLabel')}</span>
+      <span class="reservation-table-status status-${reservation.status}">${statusLabel}</span>
+    `;
+
+    row.addEventListener('click', () => {
+      selectedReservationId = isOwned ? reservation.reservationId : null;
+      renderSlotGrid();
+    });
+
+    table.appendChild(row);
+  });
+
+  slotGrid.appendChild(table);
+
+  renderSelectionSummary();
 }
 
 function renderSeatStatus() {
@@ -238,15 +498,22 @@ function renderSeatStatus() {
 
   const isOccupied = latestSeatState.occupancyStatus === 'Occupied';
   const isReserved = latestSeatState.reservationStatus === 'Reserved';
+  const currentRangeLabel = latestSeatState.currentReservationStartTime && latestSeatState.currentReservationEndTime
+    ? `${latestSeatState.currentReservationStartTime} - ${latestSeatState.currentReservationEndTime}`
+    : null;
 
   seatLabel.textContent = `${t('seatLabel')}: ${latestSeatState.seatId}`;
   setBadge(occupancyBadge, isOccupied ? 'status-occupied' : 'status-free', isOccupied ? t('occupancyOccupied') : t('occupancyFree'));
   setBadge(reservationBadge, isReserved ? 'status-reserved' : 'status-not-reserved', isReserved ? t('reservationReserved') : t('reservationNotReserved'));
   occupancyText.textContent = isOccupied ? t('occupancyOccupiedText') : t('occupancyFreeText');
-  reservationText.textContent = isReserved ? t('reservationReservedText')(latestSeatState.reservedBy) : t('reservationNotReservedText');
+  reservationText.textContent = isReserved
+    ? t('reservationReservedText')(latestSeatState.reservedBy, latestSeatState.currentReservationStartTime, latestSeatState.currentReservationEndTime)
+    : t('reservationNotReservedText');
   updatedAt.textContent = formatDate(latestSeatState.updatedAt);
   occupancyCaption.textContent = isOccupied ? t('occupancyCaptionOccupied') : t('occupancyCaptionFree');
-  reservationCaption.textContent = isReserved ? latestSeatState.reservedBy || t('reservationReserved') : t('reservationCaptionEmpty');
+  reservationCaption.textContent = isReserved
+    ? `${latestSeatState.reservedBy === 'private' ? t('reservationCaptionPrivate') : (latestSeatState.reservedBy || t('reservationReserved'))}${currentRangeLabel ? ` / ${currentRangeLabel}` : ''}`
+    : t('reservationCaptionEmpty');
 }
 
 function renderActivity() {
@@ -309,6 +576,9 @@ function applyStaticTranslations() {
   accountCaptionLabel.textContent = t('accountCaptionLabel');
   reservationHeading.textContent = t('reservationHeading');
   reservationHelper.textContent = t('reservationHelper');
+  reservationDateLabel.textContent = t('reservationDateLabel');
+  reservationStartLabel.textContent = t('reservationStartLabel');
+  reservationEndLabel.textContent = t('reservationEndLabel');
   activityHeading.textContent = t('activityHeading');
   occupancyLogLabel.textContent = t('occupancyLogLabel');
   reservationLogLabel.textContent = t('reservationLogLabel');
@@ -329,6 +599,7 @@ function rerenderAll() {
   renderSeatStatus();
   renderActivity();
   renderAuthState();
+  renderSlotGrid();
   renderMessage();
 }
 
@@ -352,6 +623,28 @@ async function loadSeatActivity() {
   } catch (error) {
     latestActivity = { recentReservations: [], recentOccupancyEvents: [] };
     renderActivity();
+  }
+}
+
+async function loadReservationSlots() {
+  try {
+    latestSlotData = await apiFetch(`/api/reservations/slots?date=${encodeURIComponent(getSelectedDate())}`);
+
+    if (selectedReservationId) {
+      const stillExists = latestSlotData.slots.some(
+        (slot) => slot.reservationId === selectedReservationId && slot.isOwnedByCurrentUser
+      );
+      if (!stillExists) {
+        selectedReservationId = null;
+      }
+    }
+
+    renderSlotGrid();
+  } catch (error) {
+    latestSlotData = { slots: [] };
+    currentMessage = error.message || t('fetchSlotsError');
+    renderSlotGrid();
+    renderMessage();
   }
 }
 
@@ -392,13 +685,18 @@ async function reserveSeat() {
   try {
     const result = await apiFetch('/api/reservations', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reservationDate: getSelectedDate(),
+        startTime: reservationStartSelect.value,
+        endTime: reservationEndSelect.value
+      })
     });
     latestSeatState = result.seat;
     currentMessage = result.message;
-    renderSeatStatus();
+    selectedReservationId = null;
+    await Promise.all([loadSeatActivity(), loadReservationSlots(), loadSeatStatus()]);
     renderMessage();
-    await loadSeatActivity();
   } catch (error) {
     currentMessage = error.message;
     renderMessage();
@@ -406,21 +704,29 @@ async function reserveSeat() {
 }
 
 async function cancelReservation() {
+  const reservation = getSelectedOwnedReservation();
+
   if (!currentUser) {
     currentMessage = 'Authentication required.';
     renderMessage();
     return;
   }
 
+  if (!reservation || !reservation.reservationId) {
+    currentMessage = t('cancelHint');
+    renderMessage();
+    return;
+  }
+
   try {
-    const result = await apiFetch('/api/reservations/current', {
+    const result = await apiFetch(`/api/reservations/${reservation.reservationId}`, {
       method: 'DELETE'
     });
     latestSeatState = result.seat;
     currentMessage = result.message;
-    renderSeatStatus();
+    selectedReservationId = null;
+    await Promise.all([loadSeatActivity(), loadReservationSlots(), loadSeatStatus()]);
     renderMessage();
-    await loadSeatActivity();
   } catch (error) {
     currentMessage = error.message;
     renderMessage();
@@ -437,16 +743,35 @@ langEnButton.addEventListener('click', () => {
   rerenderAll();
 });
 
+reservationDateInput.addEventListener('change', async () => {
+  selectedReservationId = null;
+  await loadReservationSlots();
+});
+
+reservationStartSelect.addEventListener('change', () => {
+  selectedReservationId = null;
+  syncTimeInputs();
+  renderSelectionSummary();
+});
+
+reservationEndSelect.addEventListener('change', () => {
+  selectedReservationId = null;
+  renderSelectionSummary();
+});
+
 logoutButton.addEventListener('click', logoutUser);
 reserveButton.addEventListener('click', reserveSeat);
 cancelButton.addEventListener('click', cancelReservation);
 
 (async function initializePage() {
+  reservationDateInput.value = getTodayDateValue();
+  syncTimeInputs();
   rerenderAll();
   await loadCurrentUser();
-  await Promise.all([loadSeatStatus(), loadSeatActivity()]);
+  await Promise.all([loadSeatStatus(), loadSeatActivity(), loadReservationSlots()]);
   window.setInterval(() => {
     loadSeatStatus();
     loadSeatActivity();
+    loadReservationSlots();
   }, 5000);
 })();
