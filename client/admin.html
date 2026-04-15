@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Console</title>
+    <link rel="stylesheet" href="./style.css?v=20260408f" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="dashboard-shell">
+        <header class="hero-bar">
+          <div class="hero-copy">
+            <p id="admin-eyebrow" class="eyebrow">School Admin Console</p>
+            <h1 id="admin-title">Room and Seat Management</h1>
+            <p id="admin-subtitle" class="hero-subtitle">Maintain the study-room layout used by students and devices.</p>
+          </div>
+          <div class="hero-actions">
+            <a id="admin-dashboard-link" class="action-button subtle-button link-button compact-button" href="./choose-seat.html">Back to Seat Picker</a>
+            <div class="language-switcher" aria-label="Language switcher">
+              <button id="admin-lang-zh" class="language-button" type="button">&#20013;&#25991;</button>
+              <button id="admin-lang-en" class="language-button active" type="button">EN</button>
+            </div>
+            <button id="admin-logout-button" class="action-button subtle-button compact-button" type="button">Logout</button>
+          </div>
+        </header>
+
+        <section class="dashboard-card">
+          <div class="topbar">
+            <div class="topbar-copy">
+              <p id="admin-auth-status" class="status-text compact-text">Checking admin access...</p>
+            </div>
+          </div>
+
+          <section class="two-column-grid">
+            <section class="feature-panel">
+              <h2 id="admin-area-heading">Add Area</h2>
+              <label id="admin-area-name-label" class="field-label" for="admin-area-name">Area Name</label>
+              <input id="admin-area-name" class="text-input" type="text" placeholder="Enter area name" />
+              <button id="admin-area-create-button" class="action-button primary-button full-width-button" type="button">Create Area</button>
+            </section>
+
+            <section class="feature-panel">
+              <h2 id="admin-room-heading">Add Study Room</h2>
+              <label id="admin-room-area-label" class="field-label" for="admin-room-area">Assign to Area</label>
+              <select id="admin-room-area" class="date-input"></select>
+              <label id="admin-room-name-label" class="field-label" for="admin-room-name">Room Name</label>
+              <input id="admin-room-name" class="text-input" type="text" placeholder="Enter room name" />
+              <button id="admin-room-create-button" class="action-button primary-button full-width-button" type="button">Create Room</button>
+            </section>
+
+            <section class="feature-panel">
+              <h2 id="admin-seat-heading">Add Seat</h2>
+              <label id="admin-seat-area-label" class="field-label" for="admin-seat-area">Assign to Area</label>
+              <select id="admin-seat-area" class="date-input"></select>
+              <label id="admin-seat-name-label" class="field-label" for="admin-seat-name">Seat Name</label>
+              <input id="admin-seat-name" class="text-input" type="text" placeholder="Enter seat name" />
+              <button id="admin-seat-create-button" class="action-button primary-button full-width-button" type="button">Create Seat</button>
+            </section>
+          </section>
+
+          <p id="admin-message" class="action-message">Administrative messages will appear here.</p>
+
+          <section class="activity-panel">
+            <h2 id="admin-layout-heading">Current Layout</h2>
+            <div id="admin-room-list" class="admin-room-list"></div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="./admin.js?v=20260415f"></script>
+  </body>
+</html>

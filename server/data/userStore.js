@@ -2,13 +2,13 @@ const bcrypt = require('bcryptjs');
 
 const { run, get } = require('../db');
 
-async function createUser({ username, displayName, password }) {
+async function createUser({ username, displayName, password, role = 'user' }) {
   const passwordHash = await bcrypt.hash(password, 10);
   const now = new Date().toISOString();
   const result = await run(
-    `INSERT INTO users (username, display_name, password_hash, created_at)
-     VALUES (?, ?, ?, ?)`,
-    [username, displayName, passwordHash, now]
+    `INSERT INTO users (username, display_name, role, password_hash, created_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [username, displayName, role, passwordHash, now]
   );
 
   return getUserById(result.lastID);
@@ -16,7 +16,7 @@ async function createUser({ username, displayName, password }) {
 
 function getUserById(id) {
   return get(
-    `SELECT id, username, display_name, created_at FROM users WHERE id = ?`,
+    `SELECT id, username, display_name, role, created_at FROM users WHERE id = ?`,
     [id]
   );
 }
@@ -42,6 +42,7 @@ async function verifyUserCredentials(username, password) {
     id: user.id,
     username: user.username,
     display_name: user.display_name,
+    role: user.role,
     created_at: user.created_at
   };
 }

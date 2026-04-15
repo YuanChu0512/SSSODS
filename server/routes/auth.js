@@ -25,7 +25,7 @@ router.post('/register', async (req, res, next) => {
       return res.status(409).json({ message: 'Username already exists.' });
     }
 
-    const user = await createUser({ username, displayName, password });
+    const user = await createUser({ username, displayName, password, role: 'user' });
     const token = createToken(user);
 
     return res.status(201).json({
@@ -35,6 +35,7 @@ router.post('/register', async (req, res, next) => {
         id: user.id,
         username: user.username,
         displayName: user.display_name,
+        role: user.role,
         createdAt: user.created_at
       }
     });
@@ -62,6 +63,7 @@ router.post('/login', async (req, res, next) => {
         id: user.id,
         username: user.username,
         displayName: user.display_name,
+        role: user.role,
         createdAt: user.created_at
       }
     });
@@ -83,6 +85,7 @@ router.get('/me', authenticate, async (req, res, next) => {
         id: user.id,
         username: user.username,
         displayName: user.display_name,
+        role: user.role,
         createdAt: user.created_at
       }
     });

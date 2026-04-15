@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="./style.css?v=20260408f" />
+  </head>
+  <body>
+    <main class="page auth-page">
+      <section class="auth-shell">
+        <aside class="auth-aside">
+          <p id="aside-eyebrow" class="eyebrow">Smart Study Space</p>
+          <h1 id="aside-title">Welcome Back</h1>
+          <p id="aside-text" class="hero-subtitle">
+            Sign in to check the latest seat status and manage your reservation.
+          </p>
+        </aside>
+
+        <section class="auth-card">
+          <div class="auth-toolbar">
+            <a id="back-home-link" class="back-link" href="./choose-seat.html">Choose Seat</a>
+            <div class="language-switcher" aria-label="Language switcher">
+              <button id="lang-zh" class="language-button" type="button">&#20013;&#25991;</button>
+              <button id="lang-en" class="language-button active" type="button">EN</button>
+            </div>
+          </div>
+
+          <p id="auth-badge" class="auth-badge">Account Access</p>
+          <h2 id="auth-title">Login</h2>
+          <p id="auth-subtitle" class="status-text compact-text">
+            Enter your username and password to continue.
+          </p>
+
+          <label id="username-label" class="field-label" for="username">Username</label>
+          <input id="username" class="text-input" type="text" placeholder="Enter your username" />
+
+          <label id="password-label" class="field-label" for="password">Password</label>
+          <input id="password" class="text-input" type="password" placeholder="Enter your password" />
+
+          <button id="login-button" class="action-button primary-button full-width-button" type="button">Login</button>
+
+          <p id="auth-message" class="action-message">System messages will appear here.</p>
+          <p class="auth-footer">
+            <span id="footer-text">Need a new account?</span>
+            <a id="footer-link" href="./register.html">Register here</a>
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <script src="./auth.js?v=20260415a"></script>
+  </body>
+</html>

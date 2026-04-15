@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
+    <link rel="stylesheet" href="./style.css?v=20260408f" />
+  </head>
+  <body>
+    <main class="page auth-page">
+      <section class="auth-shell">
+        <aside class="auth-aside">
+          <p id="aside-eyebrow" class="eyebrow">Smart Study Space</p>
+          <h1 id="aside-title">Create Your Account</h1>
+          <p id="aside-text" class="hero-subtitle">
+            Register a user account to reserve seats and track reservation activity.
+          </p>
+        </aside>
+
+        <section class="auth-card">
+          <div class="auth-toolbar">
+            <a id="back-home-link" class="back-link" href="./choose-seat.html">Choose Seat</a>
+            <div class="language-switcher" aria-label="Language switcher">
+              <button id="lang-zh" class="language-button" type="button">&#20013;&#25991;</button>
+              <button id="lang-en" class="language-button active" type="button">EN</button>
+            </div>
+          </div>
+
+          <p id="auth-badge" class="auth-badge">Create Account</p>
+          <h2 id="auth-title">Register</h2>
+          <p id="auth-subtitle" class="status-text compact-text">
+            Fill in your information to create a new user account.
+          </p>
+
+          <label id="display-name-label" class="field-label" for="display-name">Display Name</label>
+          <input id="display-name" class="text-input" type="text" placeholder="Enter your display name" />
+
+          <label id="username-label" class="field-label" for="username">Username</label>
+          <input id="username" class="text-input" type="text" placeholder="Choose a username" />
+
+          <label id="password-label" class="field-label" for="password">Password</label>
+          <input id="password" class="text-input" type="password" placeholder="At least 6 characters" />
+
+          <button id="register-button" class="action-button primary-button full-width-button" type="button">Register</button>
+
+          <p id="auth-message" class="action-message">System messages will appear here.</p>
+          <p class="auth-footer">
+            <span id="footer-text">Already have an account?</span>
+            <a id="footer-link" href="./login.html">Go to login</a>
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <script src="./auth.js?v=20260415a"></script>
+  </body>
+</html>

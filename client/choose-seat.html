@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Choose Seat</title>
+    <link rel="stylesheet" href="./style.css?v=20260408f" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="dashboard-shell selection-shell">
+        <header class="hero-bar">
+          <div class="hero-copy">
+            <p id="selection-eyebrow" class="eyebrow">Smart Study Space</p>
+            <h1 id="selection-title">Choose an Area, Room and Seat</h1>
+            <p id="selection-subtitle" class="hero-subtitle">
+              Choose the area first, then pick one target type: room or seat.
+            </p>
+          </div>
+
+          <div class="hero-actions">
+            <a id="selection-admin-link" class="action-button subtle-button link-button compact-button" href="./admin.html" hidden>Admin</a>
+            <a id="selection-dashboard-link" class="action-button subtle-button link-button compact-button" href="./index.html">Dashboard</a>
+            <div class="language-switcher" aria-label="Language switcher">
+              <button id="selection-lang-zh" class="language-button" type="button">&#20013;&#25991;</button>
+              <button id="selection-lang-en" class="language-button active" type="button">EN</button>
+            </div>
+            <button id="selection-logout-button" class="action-button subtle-button compact-button" type="button">Logout</button>
+          </div>
+        </header>
+
+        <section class="dashboard-card">
+          <div class="topbar selection-topbar">
+            <div class="topbar-copy">
+              <p id="selection-auth-status" class="status-text compact-text">Checking account status...</p>
+            </div>
+            <div class="meta-card">
+              <p id="selection-meta-label" class="meta-label">Seats</p>
+              <p id="selection-seat-count" class="meta-value">0</p>
+            </div>
+          </div>
+
+          <section class="layout-panel">
+            <div class="panel-head">
+              <div>
+                <p id="selection-area-label" class="panel-label">Areas</p>
+                <h2 id="selection-area-title">Step 1. Choose an area</h2>
+              </div>
+              <span id="selection-current-area-chip" class="panel-chip">No area selected</span>
+            </div>
+            <div id="selection-area-tabs" class="room-tabs"></div>
+          </section>
+
+          <section class="layout-panel">
+            <div class="panel-head">
+              <div>
+                <p id="selection-mode-label" class="panel-label">Reservation Target</p>
+                <h2 id="selection-mode-title">Step 2. Choose room or seat</h2>
+              </div>
+              <span id="selection-current-mode-chip" class="panel-chip">No target selected</span>
+            </div>
+            <div class="room-tabs">
+              <button id="selection-mode-room" class="room-tab" type="button">Room</button>
+              <button id="selection-mode-seat" class="room-tab" type="button">Seat</button>
+            </div>
+          </section>
+
+          <section id="selection-room-panel" class="layout-panel">
+            <div class="panel-head">
+              <div>
+                <p id="selection-room-label" class="panel-label">Study Rooms</p>
+                <h2 id="selection-room-title">Step 3. Choose a room</h2>
+              </div>
+              <span id="selection-current-room-chip" class="panel-chip">No room selected</span>
+            </div>
+            <div id="selection-room-tabs" class="room-tabs"></div>
+          </section>
+
+          <section id="selection-seat-panel" class="layout-panel">
+            <div class="panel-head">
+              <div>
+                <p id="selection-seat-label" class="panel-label">Seats</p>
+                <h2 id="selection-seat-title">Step 3. Choose a seat</h2>
+              </div>
+            </div>
+            <div id="selection-seat-grid" class="seat-grid"></div>
+          </section>
+
+          <section class="selection-summary-grid selection-summary-grid-4">
+            <article class="insight-card">
+              <p id="selection-selected-area-label" class="insight-label">Selected Area</p>
+              <p id="selection-selected-area" class="insight-value">-</p>
+            </article>
+            <article class="insight-card">
+              <p id="selection-selected-room-label" class="insight-label">Selected Room</p>
+              <p id="selection-selected-room" class="insight-value">-</p>
+            </article>
+            <article class="insight-card">
+              <p id="selection-selected-seat-label" class="insight-label">Selected Seat</p>
+              <p id="selection-selected-seat" class="insight-value">-</p>
+            </article>
+            <article class="insight-card">
+              <p id="selection-selected-seat-status-label" class="insight-label">Current Status</p>
+              <p id="selection-selected-seat-status" class="insight-value">-</p>
+            </article>
+          </section>
+
+          <div class="selection-footer">
+            <p id="selection-message" class="action-message">Pick one target to continue.</p>
+            <div class="action-row">
+              <button id="selection-confirm-button" class="action-button primary-button" type="button">Open Dashboard</button>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./choose-seat.js?v=20260415j"></script>
+  </body>
+</html>
